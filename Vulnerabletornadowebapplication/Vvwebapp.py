@@ -82,7 +82,6 @@ class SQLiLoadHandler(tornado.web.RequestHandler):
 class SQLiHandler(tornado.web.RequestHandler):   
     def get(self):        
         userid=self.get_argument("uid")
-        #self.write(userid)        
         con=lite.connect('db.db')
         with con:
             cur=con.cursor()           
@@ -90,8 +89,6 @@ class SQLiHandler(tornado.web.RequestHandler):
             self.write('<html><body><table style="width:50%"> <tr> <td>USERID</td><td>USERNAME</td></tr>'
                         '</table></body></html>')
             for l1 in x:
-                print l1[0]
-                print l1[1]
                 self.write('<html><body><table style="width:50%"><tr> <td>' + l1[0] + '</td><td>' + l1[1] + '</td></tr>'
                             '</table>'
                             '</body></html>')
