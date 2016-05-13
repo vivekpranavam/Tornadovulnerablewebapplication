@@ -5,9 +5,10 @@ import sqlite3
 import tornado.template
 import os
 import sqlite3 as lite
+import time
 
 def CreateDB():
-    con = lite.connect('db.db')
+    con = lite.connect('db.db')    
     with con:
         cur = con.cursor()
         cur.execute("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'user'")
@@ -20,9 +21,12 @@ def CreateDB():
         return x    
 
 #Xss part
+class MainHandler(tornado.web.RequestHandler):
+        def get(self):
+                return self.redirect('/login')
 class LoginXss(tornado.web.RequestHandler):
         def get(self):
-                return self.render('login.html')
+                return self.render('login.html')                
 class HomeHandler(tornado.web.RequestHandler):
 
         def post(self):
@@ -82,23 +86,27 @@ class SQLiLoadHandler(tornado.web.RequestHandler):
 class SQLiHandler(tornado.web.RequestHandler):   
     def get(self):        
         userid=self.get_argument("uid")
+        #self.write(userid)        
         con=lite.connect('db.db')
-        with con:
-            cur=con.cursor()           
+        with con:            
+            con.create_function("sleep", 1, time.sleep)
+            cur=con.cursor()
             x=cur.execute("select userid,username from user where userid=%s" %("'"+userid+"'"))
             self.write('<html><body><table style="width:50%"> <tr> <td>USERID</td><td>USERNAME</td></tr>'
                         '</table></body></html>')
+
             for l1 in x:
+                print l1[0]
+                print l1[1]
                 self.write('<html><body><table style="width:50%"><tr> <td>' + l1[0] + '</td><td>' + l1[1] + '</td></tr>'
                             '</table>'
-                            '</body></html>')
-                
+                            '</body></html>')           
                          
     
                              
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 settings = {
-            "debug": True,
+            "debug": False,
             "template_path": os.path.join(BASE_DIR, "templates"),
             "static_path": os.path.join(BASE_DIR, "static")
         }  
@@ -106,7 +114,7 @@ settings = {
                         
                         
 def make_app():
-        return tornado.web.Application([(r"/login", LoginXss),(r"/home", HomeHandler),(r"/user",SignupXss),
+        return tornado.web.Application([(r"/login", LoginXss),(r"/", MainHandler),(r"/home", HomeHandler),(r"/user",SignupXss),
             (r"/userlist",ListuserXss),(r"/SQLiload",SQLiLoadHandler),(r"/userdetails",SQLiHandler),(r"/dom",DOMXss)],**settings)
         
 if __name__ == "__main__":
